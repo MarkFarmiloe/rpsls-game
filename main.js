@@ -5144,16 +5144,16 @@ var $elm$core$Task$perform = F2(
 				A2($elm$core$Task$map, toMessage, task)));
 	});
 var $elm$browser$Browser$element = _Browser_element;
-var $author$project$Main$Home = {$: 'Home'};
 var $author$project$Main$Model = F5(
-	function (page, userGesture, computerGesture, userScore, computerScore) {
-		return {computerGesture: computerGesture, computerScore: computerScore, page: page, userGesture: userGesture, userScore: userScore};
+	function (stage, userGesture, computerGesture, userScore, computerScore) {
+		return {computerGesture: computerGesture, computerScore: computerScore, stage: stage, userGesture: userGesture, userScore: userScore};
 	});
+var $author$project$Main$Start = {$: 'Start'};
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Main$init = function (_v0) {
 	return _Utils_Tuple2(
-		A5($author$project$Main$Model, $author$project$Main$Home, $elm$core$Maybe$Nothing, $elm$core$Maybe$Nothing, 0, 0),
+		A5($author$project$Main$Model, $author$project$Main$Start, $elm$core$Maybe$Nothing, $elm$core$Maybe$Nothing, 0, 0),
 		$elm$core$Platform$Cmd$none);
 };
 var $elm$core$Platform$Sub$batch = _Platform_batch;
@@ -5161,24 +5161,31 @@ var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
 var $author$project$Main$subscriptions = function (_v0) {
 	return $elm$core$Platform$Sub$none;
 };
+var $author$project$Main$Outcome = {$: 'Outcome'};
+var $author$project$Main$Playing = {$: 'Playing'};
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		if (msg.$ === 'GestureClicked') {
 			var gesture = msg.a;
 			var newModel = function () {
-				var _v1 = model.userGesture;
-				if (_v1.$ === 'Nothing') {
-					return _Utils_update(
-						model,
-						{
-							userGesture: $elm$core$Maybe$Just(gesture)
-						});
-				} else {
-					return _Utils_update(
-						model,
-						{
-							computerGesture: $elm$core$Maybe$Just(gesture)
-						});
+				var _v1 = model.stage;
+				switch (_v1.$) {
+					case 'Start':
+						return _Utils_update(
+							model,
+							{
+								stage: $author$project$Main$Playing,
+								userGesture: $elm$core$Maybe$Just(gesture)
+							});
+					case 'Playing':
+						return _Utils_update(
+							model,
+							{
+								computerGesture: $elm$core$Maybe$Just(gesture),
+								stage: $author$project$Main$Outcome
+							});
+					default:
+						return model;
 				}
 			}();
 			return _Utils_Tuple2(newModel, $elm$core$Platform$Cmd$none);
@@ -5187,11 +5194,13 @@ var $author$project$Main$update = F2(
 		}
 	});
 var $elm$html$Html$div = _VirtualDom_node('div');
-var $author$project$Main$Lizard = {$: 'Lizard'};
-var $author$project$Main$Paper = {$: 'Paper'};
 var $author$project$Main$Rock = {$: 'Rock'};
-var $author$project$Main$Scissors = {$: 'Scissors'};
-var $author$project$Main$Spock = {$: 'Spock'};
+var $elm$html$Html$button = _VirtualDom_node('button');
+var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
+var $author$project$Main$GestureClicked = function (a) {
+	return {$: 'GestureClicked', a: a};
+};
 var $elm$json$Json$Encode$string = _Json_wrap;
 var $elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
@@ -5201,9 +5210,6 @@ var $elm$html$Html$Attributes$stringProperty = F2(
 			$elm$json$Json$Encode$string(string));
 	});
 var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
-var $author$project$Main$GestureClicked = function (a) {
-	return {$: 'GestureClicked', a: a};
-};
 var $elm$core$List$filter = F2(
 	function (isGood, list) {
 		return A3(
@@ -5294,11 +5300,145 @@ var $author$project$Main$viewGesture = F2(
 					_List_Nil)
 				]));
 	});
+var $author$project$Main$Computer = {$: 'Computer'};
+var $author$project$Main$Draw = {$: 'Draw'};
+var $author$project$Main$User = {$: 'User'};
+var $author$project$Main$winner = function (model) {
+	var _v0 = _Utils_Tuple2(model.userGesture, model.computerGesture);
+	if ((_v0.a.$ === 'Just') && (_v0.b.$ === 'Just')) {
+		var ug = _v0.a.a;
+		var cg = _v0.b.a;
+		if (_Utils_eq(ug, cg)) {
+			return $author$project$Main$Draw;
+		} else {
+			var _v1 = _Utils_Tuple2(ug, cg);
+			_v1$10:
+			while (true) {
+				switch (_v1.a.$) {
+					case 'Rock':
+						switch (_v1.b.$) {
+							case 'Scissors':
+								var _v2 = _v1.a;
+								var _v3 = _v1.b;
+								return $author$project$Main$User;
+							case 'Lizard':
+								var _v4 = _v1.a;
+								var _v5 = _v1.b;
+								return $author$project$Main$User;
+							default:
+								break _v1$10;
+						}
+					case 'Paper':
+						switch (_v1.b.$) {
+							case 'Rock':
+								var _v6 = _v1.a;
+								var _v7 = _v1.b;
+								return $author$project$Main$User;
+							case 'Spock':
+								var _v8 = _v1.a;
+								var _v9 = _v1.b;
+								return $author$project$Main$User;
+							default:
+								break _v1$10;
+						}
+					case 'Scissors':
+						switch (_v1.b.$) {
+							case 'Paper':
+								var _v10 = _v1.a;
+								var _v11 = _v1.b;
+								return $author$project$Main$User;
+							case 'Lizard':
+								var _v12 = _v1.a;
+								var _v13 = _v1.b;
+								return $author$project$Main$User;
+							default:
+								break _v1$10;
+						}
+					case 'Lizard':
+						switch (_v1.b.$) {
+							case 'Paper':
+								var _v14 = _v1.a;
+								var _v15 = _v1.b;
+								return $author$project$Main$User;
+							case 'Spock':
+								var _v16 = _v1.a;
+								var _v17 = _v1.b;
+								return $author$project$Main$User;
+							default:
+								break _v1$10;
+						}
+					default:
+						switch (_v1.b.$) {
+							case 'Rock':
+								var _v18 = _v1.a;
+								var _v19 = _v1.b;
+								return $author$project$Main$User;
+							case 'Scissors':
+								var _v20 = _v1.a;
+								var _v21 = _v1.b;
+								return $author$project$Main$User;
+							default:
+								break _v1$10;
+						}
+				}
+			}
+			return $author$project$Main$Computer;
+		}
+	} else {
+		return $author$project$Main$Draw;
+	}
+};
+var $author$project$Main$winnerToString = function (result) {
+	switch (result.$) {
+		case 'Draw':
+			return 'It\'s a draw - let\'s try again';
+		case 'User':
+			return 'You win';
+		default:
+			return 'You lost';
+	}
+};
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var $author$project$Main$viewOutcome = function (model) {
+	return _List_fromArray(
+		[
+			A2(
+			$author$project$Main$viewGesture,
+			A2($elm$core$Maybe$withDefault, $author$project$Main$Rock, model.userGesture),
+			true),
+			A2(
+			$author$project$Main$viewGesture,
+			A2($elm$core$Maybe$withDefault, $author$project$Main$Rock, model.computerGesture),
+			true),
+			$elm$html$Html$text(
+			$author$project$Main$winnerToString(
+				$author$project$Main$winner(model))),
+			A2(
+			$elm$html$Html$button,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Play again')
+				]))
+		]);
+};
+var $author$project$Main$Lizard = {$: 'Lizard'};
+var $author$project$Main$Paper = {$: 'Paper'};
+var $author$project$Main$Scissors = {$: 'Scissors'};
+var $author$project$Main$Spock = {$: 'Spock'};
 var $author$project$Main$viewGestureWheel = function (model) {
 	var selected = function (gesture) {
-		var _v1 = model.page;
+		var _v1 = model.stage;
 		switch (_v1.$) {
-			case 'Home':
+			case 'Start':
 				return _Utils_eq(
 					$elm$core$Maybe$Just(gesture),
 					model.userGesture);
@@ -5311,9 +5451,9 @@ var $author$project$Main$viewGestureWheel = function (model) {
 		}
 	};
 	var attr = function () {
-		var _v0 = model.page;
+		var _v0 = model.stage;
 		switch (_v0.$) {
-			case 'Home':
+			case 'Start':
 				return 'user-gesture';
 			case 'Playing':
 				return 'computer-gesture';
@@ -5356,7 +5496,29 @@ var $author$project$Main$viewGestureWheel = function (model) {
 				selected($author$project$Main$Spock))
 			]));
 };
-var $author$project$Main$viewHome = function (model) {
+var $author$project$Main$viewPlaying = function (model) {
+	return _List_fromArray(
+		[
+			A2(
+			$elm$html$Html$div,
+			_List_Nil,
+			_List_fromArray(
+				[
+					A2(
+					$author$project$Main$viewGesture,
+					A2($elm$core$Maybe$withDefault, $author$project$Main$Rock, model.userGesture),
+					true)
+				])),
+			A2(
+			$elm$html$Html$div,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$author$project$Main$viewGestureWheel(model)
+				]))
+		]);
+};
+var $author$project$Main$viewStart = function (model) {
 	return _List_fromArray(
 		[
 			A2(
@@ -5368,25 +5530,11 @@ var $author$project$Main$viewHome = function (model) {
 				]))
 		]);
 };
-var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
-var $author$project$Main$viewOutcome = function (model) {
-	return _List_fromArray(
-		[
-			$elm$html$Html$text('Outcome')
-		]);
-};
-var $author$project$Main$viewPlaying = function (model) {
-	return _List_fromArray(
-		[
-			$elm$html$Html$text('Playing')
-		]);
-};
 var $author$project$Main$viewContent = function (model) {
-	var _v0 = model.page;
+	var _v0 = model.stage;
 	switch (_v0.$) {
-		case 'Home':
-			return $author$project$Main$viewHome(model);
+		case 'Start':
+			return $author$project$Main$viewStart(model);
 		case 'Playing':
 			return $author$project$Main$viewPlaying(model);
 		default:
@@ -5416,10 +5564,10 @@ var $author$project$Main$gestureToString = function (maybeGesture) {
 		return 'No gesture yet';
 	}
 };
-var $author$project$Main$pageToString = function (page) {
-	switch (page.$) {
-		case 'Home':
-			return 'Home';
+var $author$project$Main$stageToString = function (stage) {
+	switch (stage.$) {
+		case 'Start':
+			return 'Start';
 		case 'Playing':
 			return 'Playing';
 		default:
@@ -5435,7 +5583,7 @@ var $author$project$Main$viewFooter = function (model) {
 			_List_fromArray(
 				[
 					$elm$html$Html$text(
-					$author$project$Main$pageToString(model.page)),
+					$author$project$Main$stageToString(model.stage)),
 					$elm$html$Html$text(
 					$author$project$Main$gestureToString(model.userGesture)),
 					$elm$html$Html$text(
@@ -5455,7 +5603,8 @@ var $author$project$Main$viewHeader = function (model) {
 			_List_Nil,
 			_List_fromArray(
 				[
-					$elm$html$Html$text('Header')
+					$elm$html$Html$text(
+					$author$project$Main$stageToString(model.stage))
 				]))
 		]);
 };

@@ -1,13 +1,13 @@
 module Main exposing (..)
 
 import Browser
-import Html exposing (Html, div, img, text)
+import Html exposing (Html, button, div, img, text)
 import Html.Attributes exposing (class, classList, src)
 import Html.Events exposing (onClick)
 
 
-type Page
-    = Home
+type Stage
+    = Start
     | Playing
     | Outcome
 
@@ -26,11 +26,11 @@ type Winner
     | Computer
 
 
-pageToString : Page -> String
-pageToString page =
-    case page of
-        Home ->
-            "Home"
+stageToString : Stage -> String
+stageToString stage =
+    case stage of
+        Start ->
+            "Start"
 
         Playing ->
             "Playing"
@@ -74,47 +74,49 @@ winnerToString result =
             "You lost"
 
 
-winner : Gesture -> Gesture -> Winner
-winner user computer =
-    if user == computer then
-        Draw
+winner : Model -> Winner
+winner model =
+    case (model.userGesture, model.computerGesture) of
+        (Just ug, Just cg) ->
+            if ug == cg then
+                Draw
 
-    else
-        case ( user, computer ) of
-            ( Rock, Scissors ) ->
-                User
+            else
+                case ( ug, cg ) of
+                    ( Rock, Scissors ) ->
+                        User
 
-            ( Rock, Lizard ) ->
-                User
+                    ( Rock, Lizard ) ->
+                        User
 
-            ( Paper, Rock ) ->
-                User
+                    ( Paper, Rock ) ->
+                        User
 
-            ( Paper, Spock ) ->
-                User
+                    ( Paper, Spock ) ->
+                        User
 
-            ( Scissors, Paper ) ->
-                User
+                    ( Scissors, Paper ) ->
+                        User
 
-            ( Scissors, Lizard ) ->
-                User
+                    ( Scissors, Lizard ) ->
+                        User
 
-            ( Lizard, Paper ) ->
-                User
+                    ( Lizard, Paper ) ->
+                        User
 
-            ( Lizard, Spock ) ->
-                User
+                    ( Lizard, Spock ) ->
+                        User
 
-            ( Spock, Rock ) ->
-                User
+                    ( Spock, Rock ) ->
+                        User
 
-            ( Spock, Scissors ) ->
-                User
+                    ( Spock, Scissors ) ->
+                        User
 
-            ( _, _ ) ->
-                Computer
+                    ( _, _ ) ->
+                        Computer
 
-
+        (_, _) -> Draw
 
 -- MAIN
 
@@ -134,7 +136,7 @@ main =
 
 
 type alias Model =
-    { page : Page
+    { stage : Stage
     , userGesture : Maybe Gesture
     , computerGesture : Maybe Gesture
     , userScore : Int
@@ -144,7 +146,7 @@ type alias Model =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Model Home Nothing Nothing 0 0
+    ( Model Start Nothing Nothing 0 0
     , Cmd.none
     )
 
@@ -164,12 +166,14 @@ update msg model =
         GestureClicked gesture ->
             let
                 newModel =
-                    case model.userGesture of
-                        Nothing ->
-                            { model | userGesture = Just gesture }
+                    case model.stage of
+                        Start ->
+                            { model | userGesture = Just gesture, stage = Playing }
 
-                        _ ->
-                            { model | computerGesture = Just gesture }
+                        Playing ->
+                            { model | computerGesture = Just gesture, stage = Outcome }
+
+                        _ -> model
             in
             ( newModel, Cmd.none )
 
@@ -194,14 +198,16 @@ view model =
 --         text "time to play"
 
 
+viewHeader : Model -> List (Html msg)
 viewHeader model =
-    [ div [] [ text "Header" ] ]
+    [ div [] [ text (stageToString model.stage) ] ]
 
 
+viewContent : Model -> List (Html Msg)
 viewContent model =
-    case model.page of
-        Home ->
-            viewHome model
+    case model.stage of
+        Start ->
+            viewStart model
 
         Playing ->
             viewPlaying model
@@ -213,7 +219,7 @@ viewContent model =
 viewFooter : Model -> List (Html msg)
 viewFooter model =
     [ div []
-        [ text (pageToString model.page)
+        [ text (stageToString model.stage)
         , text (gestureToString model.userGesture)
         , text (gestureToString model.computerGesture)
         , text (String.fromInt model.userScore)
@@ -222,17 +228,26 @@ viewFooter model =
     ]
 
 
-viewHome model =
+viewStart : Model -> List (Html Msg)
+viewStart model =
     [ div [] [ viewGestureWheel model ]
     ]
 
 
+viewPlaying : Model -> List (Html Msg)
 viewPlaying model =
-    [ text "Playing" ]
+    [ div [] [ viewGesture (Maybe.withDefault Rock model.userGesture) True ]
+    , div [] [ viewGestureWheel model ]
+    ]
 
 
+viewOutcome : Model -> List (Html Msg)
 viewOutcome model =
-    [ text "Outcome" ]
+    [ viewGesture (Maybe.withDefault Rock model.userGesture) True
+    , viewGesture (Maybe.withDefault Rock model.computerGesture) True
+    , text <| winnerToString <| winner model
+    , button [] [ text "Play again" ]
+    ]
 
 
 viewGesture : Gesture -> Bool -> Html Msg
@@ -259,11 +274,12 @@ viewGesture gesture selected =
         [ img [ class "gesture", src source ] [] ]
 
 
+viewGestureWheel : Model -> Html Msg
 viewGestureWheel model =
     let
         attr =
-            case model.page of
-                Home ->
+            case model.stage of
+                Start ->
                     "user-gesture"
 
                 Playing ->
@@ -273,8 +289,8 @@ viewGestureWheel model =
                     ""
 
         selected gesture =
-            case model.page of
-                Home ->
+            case model.stage of
+                Start ->
                     Just gesture == model.userGesture
 
                 Playing ->
