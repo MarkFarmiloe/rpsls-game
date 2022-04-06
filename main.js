@@ -4355,6 +4355,89 @@ function _Browser_load(url)
 		}
 	}));
 }
+
+
+
+var _Bitwise_and = F2(function(a, b)
+{
+	return a & b;
+});
+
+var _Bitwise_or = F2(function(a, b)
+{
+	return a | b;
+});
+
+var _Bitwise_xor = F2(function(a, b)
+{
+	return a ^ b;
+});
+
+function _Bitwise_complement(a)
+{
+	return ~a;
+};
+
+var _Bitwise_shiftLeftBy = F2(function(offset, a)
+{
+	return a << offset;
+});
+
+var _Bitwise_shiftRightBy = F2(function(offset, a)
+{
+	return a >> offset;
+});
+
+var _Bitwise_shiftRightZfBy = F2(function(offset, a)
+{
+	return a >>> offset;
+});
+
+
+
+function _Time_now(millisToPosix)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		callback(_Scheduler_succeed(millisToPosix(Date.now())));
+	});
+}
+
+var _Time_setInterval = F2(function(interval, task)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		var id = setInterval(function() { _Scheduler_rawSpawn(task); }, interval);
+		return function() { clearInterval(id); };
+	});
+});
+
+function _Time_here()
+{
+	return _Scheduler_binding(function(callback)
+	{
+		callback(_Scheduler_succeed(
+			A2($elm$time$Time$customZone, -(new Date().getTimezoneOffset()), _List_Nil)
+		));
+	});
+}
+
+
+function _Time_getZoneName()
+{
+	return _Scheduler_binding(function(callback)
+	{
+		try
+		{
+			var name = $elm$time$Time$Name(Intl.DateTimeFormat().resolvedOptions().timeZone);
+		}
+		catch (e)
+		{
+			var name = $elm$time$Time$Offset(new Date().getTimezoneOffset());
+		}
+		callback(_Scheduler_succeed(name));
+	});
+}
 var $elm$core$Basics$EQ = {$: 'EQ'};
 var $elm$core$Basics$GT = {$: 'GT'};
 var $elm$core$Basics$LT = {$: 'LT'};
@@ -5144,16 +5227,16 @@ var $elm$core$Task$perform = F2(
 				A2($elm$core$Task$map, toMessage, task)));
 	});
 var $elm$browser$Browser$element = _Browser_element;
-var $author$project$Main$Model = F5(
-	function (stage, userGesture, computerGesture, userScore, computerScore) {
-		return {computerGesture: computerGesture, computerScore: computerScore, stage: stage, userGesture: userGesture, userScore: userScore};
+var $author$project$Main$Model = F3(
+	function (stage, userScore, computerScore) {
+		return {computerScore: computerScore, stage: stage, userScore: userScore};
 	});
 var $author$project$Main$Start = {$: 'Start'};
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Main$init = function (_v0) {
 	return _Utils_Tuple2(
-		A5($author$project$Main$Model, $author$project$Main$Start, $elm$core$Maybe$Nothing, $elm$core$Maybe$Nothing, 0, 0),
+		A3($author$project$Main$Model, $author$project$Main$Start, 0, 0),
 		$elm$core$Platform$Cmd$none);
 };
 var $elm$core$Platform$Sub$batch = _Platform_batch;
@@ -5161,46 +5244,383 @@ var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
 var $author$project$Main$subscriptions = function (_v0) {
 	return $elm$core$Platform$Sub$none;
 };
-var $author$project$Main$Outcome = {$: 'Outcome'};
-var $author$project$Main$Playing = {$: 'Playing'};
+var $author$project$Main$Computer = {$: 'Computer'};
+var $author$project$Main$ComputerGestureHighlighted = F2(
+	function (a, b) {
+		return {$: 'ComputerGestureHighlighted', a: a, b: b};
+	});
+var $author$project$Main$ComputerGestureSelected = function (a) {
+	return {$: 'ComputerGestureSelected', a: a};
+};
+var $author$project$Main$ComputerHighlighting = F2(
+	function (a, b) {
+		return {$: 'ComputerHighlighting', a: a, b: b};
+	});
+var $author$project$Main$Outcome = F2(
+	function (a, b) {
+		return {$: 'Outcome', a: a, b: b};
+	});
+var $author$project$Main$Rock = {$: 'Rock'};
+var $author$project$Main$ShowOutcome = function (a) {
+	return {$: 'ShowOutcome', a: a};
+};
+var $author$project$Main$User = {$: 'User'};
+var $author$project$Main$UserSelected = function (a) {
+	return {$: 'UserSelected', a: a};
+};
+var $elm$core$Basics$always = F2(
+	function (a, _v0) {
+		return a;
+	});
+var $elm$core$Process$sleep = _Process_sleep;
+var $andrewMacmurray$elm_delay$Delay$after = F2(
+	function (time, msg) {
+		return A2(
+			$elm$core$Task$perform,
+			$elm$core$Basics$always(msg),
+			$elm$core$Process$sleep(time));
+	});
+var $elm$random$Random$Generate = function (a) {
+	return {$: 'Generate', a: a};
+};
+var $elm$random$Random$Seed = F2(
+	function (a, b) {
+		return {$: 'Seed', a: a, b: b};
+	});
+var $elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
+var $elm$random$Random$next = function (_v0) {
+	var state0 = _v0.a;
+	var incr = _v0.b;
+	return A2($elm$random$Random$Seed, ((state0 * 1664525) + incr) >>> 0, incr);
+};
+var $elm$random$Random$initialSeed = function (x) {
+	var _v0 = $elm$random$Random$next(
+		A2($elm$random$Random$Seed, 0, 1013904223));
+	var state1 = _v0.a;
+	var incr = _v0.b;
+	var state2 = (state1 + x) >>> 0;
+	return $elm$random$Random$next(
+		A2($elm$random$Random$Seed, state2, incr));
+};
+var $elm$time$Time$Name = function (a) {
+	return {$: 'Name', a: a};
+};
+var $elm$time$Time$Offset = function (a) {
+	return {$: 'Offset', a: a};
+};
+var $elm$time$Time$Zone = F2(
+	function (a, b) {
+		return {$: 'Zone', a: a, b: b};
+	});
+var $elm$time$Time$customZone = $elm$time$Time$Zone;
+var $elm$time$Time$Posix = function (a) {
+	return {$: 'Posix', a: a};
+};
+var $elm$time$Time$millisToPosix = $elm$time$Time$Posix;
+var $elm$time$Time$now = _Time_now($elm$time$Time$millisToPosix);
+var $elm$time$Time$posixToMillis = function (_v0) {
+	var millis = _v0.a;
+	return millis;
+};
+var $elm$random$Random$init = A2(
+	$elm$core$Task$andThen,
+	function (time) {
+		return $elm$core$Task$succeed(
+			$elm$random$Random$initialSeed(
+				$elm$time$Time$posixToMillis(time)));
+	},
+	$elm$time$Time$now);
+var $elm$random$Random$step = F2(
+	function (_v0, seed) {
+		var generator = _v0.a;
+		return generator(seed);
+	});
+var $elm$random$Random$onEffects = F3(
+	function (router, commands, seed) {
+		if (!commands.b) {
+			return $elm$core$Task$succeed(seed);
+		} else {
+			var generator = commands.a.a;
+			var rest = commands.b;
+			var _v1 = A2($elm$random$Random$step, generator, seed);
+			var value = _v1.a;
+			var newSeed = _v1.b;
+			return A2(
+				$elm$core$Task$andThen,
+				function (_v2) {
+					return A3($elm$random$Random$onEffects, router, rest, newSeed);
+				},
+				A2($elm$core$Platform$sendToApp, router, value));
+		}
+	});
+var $elm$random$Random$onSelfMsg = F3(
+	function (_v0, _v1, seed) {
+		return $elm$core$Task$succeed(seed);
+	});
+var $elm$random$Random$Generator = function (a) {
+	return {$: 'Generator', a: a};
+};
+var $elm$random$Random$map = F2(
+	function (func, _v0) {
+		var genA = _v0.a;
+		return $elm$random$Random$Generator(
+			function (seed0) {
+				var _v1 = genA(seed0);
+				var a = _v1.a;
+				var seed1 = _v1.b;
+				return _Utils_Tuple2(
+					func(a),
+					seed1);
+			});
+	});
+var $elm$random$Random$cmdMap = F2(
+	function (func, _v0) {
+		var generator = _v0.a;
+		return $elm$random$Random$Generate(
+			A2($elm$random$Random$map, func, generator));
+	});
+_Platform_effectManagers['Random'] = _Platform_createManager($elm$random$Random$init, $elm$random$Random$onEffects, $elm$random$Random$onSelfMsg, $elm$random$Random$cmdMap);
+var $elm$random$Random$command = _Platform_leaf('Random');
+var $elm$random$Random$generate = F2(
+	function (tagger, generator) {
+		return $elm$random$Random$command(
+			$elm$random$Random$Generate(
+				A2($elm$random$Random$map, tagger, generator)));
+	});
+var $elm$core$Bitwise$and = _Bitwise_and;
+var $elm$core$Basics$negate = function (n) {
+	return -n;
+};
+var $elm$core$Bitwise$xor = _Bitwise_xor;
+var $elm$random$Random$peel = function (_v0) {
+	var state = _v0.a;
+	var word = (state ^ (state >>> ((state >>> 28) + 4))) * 277803737;
+	return ((word >>> 22) ^ word) >>> 0;
+};
+var $elm$random$Random$int = F2(
+	function (a, b) {
+		return $elm$random$Random$Generator(
+			function (seed0) {
+				var _v0 = (_Utils_cmp(a, b) < 0) ? _Utils_Tuple2(a, b) : _Utils_Tuple2(b, a);
+				var lo = _v0.a;
+				var hi = _v0.b;
+				var range = (hi - lo) + 1;
+				if (!((range - 1) & range)) {
+					return _Utils_Tuple2(
+						(((range - 1) & $elm$random$Random$peel(seed0)) >>> 0) + lo,
+						$elm$random$Random$next(seed0));
+				} else {
+					var threshhold = (((-range) >>> 0) % range) >>> 0;
+					var accountForBias = function (seed) {
+						accountForBias:
+						while (true) {
+							var x = $elm$random$Random$peel(seed);
+							var seedN = $elm$random$Random$next(seed);
+							if (_Utils_cmp(x, threshhold) < 0) {
+								var $temp$seed = seedN;
+								seed = $temp$seed;
+								continue accountForBias;
+							} else {
+								return _Utils_Tuple2((x % range) + lo, seedN);
+							}
+						}
+					};
+					return accountForBias(seed0);
+				}
+			});
+	});
+var $author$project$Main$Lizard = {$: 'Lizard'};
+var $author$project$Main$Paper = {$: 'Paper'};
+var $author$project$Main$Scissors = {$: 'Scissors'};
+var $author$project$Main$Spock = {$: 'Spock'};
+var $elm$core$Basics$modBy = _Basics_modBy;
+var $author$project$Main$intToGesture = function (n) {
+	var _v0 = A2($elm$core$Basics$modBy, 5, n);
+	switch (_v0) {
+		case 1:
+			return $author$project$Main$Rock;
+		case 2:
+			return $author$project$Main$Paper;
+		case 3:
+			return $author$project$Main$Scissors;
+		case 4:
+			return $author$project$Main$Lizard;
+		default:
+			return $author$project$Main$Spock;
+	}
+};
+var $author$project$Main$Draw = {$: 'Draw'};
+var $author$project$Main$winner = F2(
+	function (ug, cg) {
+		if (_Utils_eq(ug, cg)) {
+			return $author$project$Main$Draw;
+		} else {
+			var _v0 = _Utils_Tuple2(ug, cg);
+			_v0$10:
+			while (true) {
+				switch (_v0.a.$) {
+					case 'Rock':
+						switch (_v0.b.$) {
+							case 'Scissors':
+								var _v1 = _v0.a;
+								var _v2 = _v0.b;
+								return $author$project$Main$User;
+							case 'Lizard':
+								var _v3 = _v0.a;
+								var _v4 = _v0.b;
+								return $author$project$Main$User;
+							default:
+								break _v0$10;
+						}
+					case 'Paper':
+						switch (_v0.b.$) {
+							case 'Rock':
+								var _v5 = _v0.a;
+								var _v6 = _v0.b;
+								return $author$project$Main$User;
+							case 'Spock':
+								var _v7 = _v0.a;
+								var _v8 = _v0.b;
+								return $author$project$Main$User;
+							default:
+								break _v0$10;
+						}
+					case 'Scissors':
+						switch (_v0.b.$) {
+							case 'Paper':
+								var _v9 = _v0.a;
+								var _v10 = _v0.b;
+								return $author$project$Main$User;
+							case 'Lizard':
+								var _v11 = _v0.a;
+								var _v12 = _v0.b;
+								return $author$project$Main$User;
+							default:
+								break _v0$10;
+						}
+					case 'Lizard':
+						switch (_v0.b.$) {
+							case 'Paper':
+								var _v13 = _v0.a;
+								var _v14 = _v0.b;
+								return $author$project$Main$User;
+							case 'Spock':
+								var _v15 = _v0.a;
+								var _v16 = _v0.b;
+								return $author$project$Main$User;
+							default:
+								break _v0$10;
+						}
+					default:
+						switch (_v0.b.$) {
+							case 'Rock':
+								var _v17 = _v0.a;
+								var _v18 = _v0.b;
+								return $author$project$Main$User;
+							case 'Scissors':
+								var _v19 = _v0.a;
+								var _v20 = _v0.b;
+								return $author$project$Main$User;
+							default:
+								break _v0$10;
+						}
+				}
+			}
+			return $author$project$Main$Computer;
+		}
+	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
-		if (msg.$ === 'GestureClicked') {
-			var gesture = msg.a;
-			var newModel = function () {
-				var _v1 = model.stage;
-				switch (_v1.$) {
-					case 'Start':
-						return _Utils_update(
+		switch (msg.$) {
+			case 'UserGestureClicked':
+				var gesture = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							stage: $author$project$Main$UserSelected(gesture)
+						}),
+					A2(
+						$elm$random$Random$generate,
+						$author$project$Main$ComputerGestureSelected,
+						A2($elm$random$Random$int, 1, 5)));
+			case 'ComputerGestureSelected':
+				var n = msg.a;
+				return _Utils_Tuple2(
+					model,
+					A2(
+						$andrewMacmurray$elm_delay$Delay$after,
+						100,
+						A2($author$project$Main$ComputerGestureHighlighted, 1, n + 5)));
+			case 'ComputerGestureHighlighted':
+				var count = msg.a;
+				var n = msg.b;
+				var userG = function () {
+					var _v1 = model.stage;
+					switch (_v1.$) {
+						case 'UserSelected':
+							var ug = _v1.a;
+							return ug;
+						case 'ComputerHighlighting':
+							var userg = _v1.a;
+							return userg;
+						default:
+							return $author$project$Main$Rock;
+					}
+				}();
+				return (_Utils_cmp(count, n) < 0) ? _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							stage: A2(
+								$author$project$Main$ComputerHighlighting,
+								userG,
+								$author$project$Main$intToGesture(count))
+						}),
+					A2(
+						$andrewMacmurray$elm_delay$Delay$after,
+						200,
+						A2($author$project$Main$ComputerGestureHighlighted, count + 1, n))) : _Utils_Tuple2(
+					model,
+					A2(
+						$andrewMacmurray$elm_delay$Delay$after,
+						100,
+						$author$project$Main$ShowOutcome(
+							$author$project$Main$intToGesture(n))));
+			case 'ShowOutcome':
+				var cg = msg.a;
+				var _v2 = model.stage;
+				if (_v2.$ === 'ComputerHighlighting') {
+					var userG = _v2.a;
+					var theWinner = A2($author$project$Main$winner, userG, cg);
+					var newUserScore = model.userScore + (_Utils_eq(theWinner, $author$project$Main$User) ? 1 : 0);
+					var newComputerScore = model.computerScore + (_Utils_eq(theWinner, $author$project$Main$Computer) ? 1 : 0);
+					return _Utils_Tuple2(
+						_Utils_update(
 							model,
 							{
-								stage: $author$project$Main$Playing,
-								userGesture: $elm$core$Maybe$Just(gesture)
-							});
-					case 'Playing':
-						return _Utils_update(
-							model,
-							{
-								computerGesture: $elm$core$Maybe$Just(gesture),
-								stage: $author$project$Main$Outcome
-							});
-					default:
-						return model;
+								computerScore: newComputerScore,
+								stage: A2($author$project$Main$Outcome, userG, cg),
+								userScore: newUserScore
+							}),
+						$elm$core$Platform$Cmd$none);
+				} else {
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 				}
-			}();
-			return _Utils_Tuple2(newModel, $elm$core$Platform$Cmd$none);
-		} else {
-			return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+			default:
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{stage: $author$project$Main$Start}),
+					$elm$core$Platform$Cmd$none);
 		}
 	});
 var $elm$html$Html$div = _VirtualDom_node('div');
-var $author$project$Main$Rock = {$: 'Rock'};
-var $elm$html$Html$button = _VirtualDom_node('button');
-var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
-var $author$project$Main$GestureClicked = function (a) {
-	return {$: 'GestureClicked', a: a};
+var $elm$virtual_dom$VirtualDom$keyedNode = function (tag) {
+	return _VirtualDom_keyedNode(
+		_VirtualDom_noScript(tag));
 };
+var $elm$html$Html$Keyed$node = $elm$virtual_dom$VirtualDom$keyedNode;
 var $elm$json$Json$Encode$string = _Json_wrap;
 var $elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
@@ -5235,6 +5655,11 @@ var $elm$html$Html$Attributes$classList = function (classes) {
 				$elm$core$Tuple$first,
 				A2($elm$core$List$filter, $elm$core$Tuple$second, classes))));
 };
+var $elm$html$Html$li = _VirtualDom_node('li');
+var $elm$core$Basics$neq = _Utils_notEqual;
+var $author$project$Main$UserGestureClicked = function (a) {
+	return {$: 'UserGestureClicked', a: a};
+};
 var $elm$html$Html$img = _VirtualDom_node('img');
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
@@ -5259,8 +5684,8 @@ var $elm$html$Html$Attributes$src = function (url) {
 		'src',
 		_VirtualDom_noJavaScriptOrHtmlUri(url));
 };
-var $author$project$Main$viewGesture = F2(
-	function (gesture, selected) {
+var $author$project$Main$viewGesture = F4(
+	function (gesture, selected, highlighted, clickable) {
 		var source = function () {
 			switch (gesture.$) {
 				case 'Rock':
@@ -5275,7 +5700,7 @@ var $author$project$Main$viewGesture = F2(
 					return 'assets/spock.png';
 			}
 		}();
-		return A2(
+		return clickable ? A2(
 			$elm$html$Html$div,
 			_List_fromArray(
 				[
@@ -5283,10 +5708,33 @@ var $author$project$Main$viewGesture = F2(
 					$elm$html$Html$Attributes$classList(
 					_List_fromArray(
 						[
-							_Utils_Tuple2('selected', selected)
+							_Utils_Tuple2('selected', selected),
+							_Utils_Tuple2('highlighted', highlighted)
 						])),
 					$elm$html$Html$Events$onClick(
-					$author$project$Main$GestureClicked(gesture))
+					$author$project$Main$UserGestureClicked(gesture))
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$img,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('gesture'),
+							$elm$html$Html$Attributes$src(source)
+						]),
+					_List_Nil)
+				])) : A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('gesture-container'),
+					$elm$html$Html$Attributes$classList(
+					_List_fromArray(
+						[
+							_Utils_Tuple2('selected', selected),
+							_Utils_Tuple2('highlighted', highlighted)
+						]))
 				]),
 			_List_fromArray(
 				[
@@ -5300,94 +5748,85 @@ var $author$project$Main$viewGesture = F2(
 					_List_Nil)
 				]));
 	});
-var $author$project$Main$Computer = {$: 'Computer'};
-var $author$project$Main$Draw = {$: 'Draw'};
-var $author$project$Main$User = {$: 'User'};
-var $author$project$Main$winner = function (model) {
-	var _v0 = _Utils_Tuple2(model.userGesture, model.computerGesture);
-	if ((_v0.a.$ === 'Just') && (_v0.b.$ === 'Just')) {
-		var ug = _v0.a.a;
-		var cg = _v0.b.a;
-		if (_Utils_eq(ug, cg)) {
-			return $author$project$Main$Draw;
-		} else {
-			var _v1 = _Utils_Tuple2(ug, cg);
-			_v1$10:
-			while (true) {
-				switch (_v1.a.$) {
-					case 'Rock':
-						switch (_v1.b.$) {
-							case 'Scissors':
-								var _v2 = _v1.a;
-								var _v3 = _v1.b;
-								return $author$project$Main$User;
-							case 'Lizard':
-								var _v4 = _v1.a;
-								var _v5 = _v1.b;
-								return $author$project$Main$User;
-							default:
-								break _v1$10;
-						}
-					case 'Paper':
-						switch (_v1.b.$) {
-							case 'Rock':
-								var _v6 = _v1.a;
-								var _v7 = _v1.b;
-								return $author$project$Main$User;
-							case 'Spock':
-								var _v8 = _v1.a;
-								var _v9 = _v1.b;
-								return $author$project$Main$User;
-							default:
-								break _v1$10;
-						}
-					case 'Scissors':
-						switch (_v1.b.$) {
-							case 'Paper':
-								var _v10 = _v1.a;
-								var _v11 = _v1.b;
-								return $author$project$Main$User;
-							case 'Lizard':
-								var _v12 = _v1.a;
-								var _v13 = _v1.b;
-								return $author$project$Main$User;
-							default:
-								break _v1$10;
-						}
-					case 'Lizard':
-						switch (_v1.b.$) {
-							case 'Paper':
-								var _v14 = _v1.a;
-								var _v15 = _v1.b;
-								return $author$project$Main$User;
-							case 'Spock':
-								var _v16 = _v1.a;
-								var _v17 = _v1.b;
-								return $author$project$Main$User;
-							default:
-								break _v1$10;
-						}
-					default:
-						switch (_v1.b.$) {
-							case 'Rock':
-								var _v18 = _v1.a;
-								var _v19 = _v1.b;
-								return $author$project$Main$User;
-							case 'Scissors':
-								var _v20 = _v1.a;
-								var _v21 = _v1.b;
-								return $author$project$Main$User;
-							default:
-								break _v1$10;
-						}
-				}
+var $author$project$Main$viewGestureWheel = F2(
+	function (maybeHighlightedGesture, maybeGesture) {
+		var selected = function (gesture) {
+			if (maybeGesture.$ === 'Just') {
+				var aGesture = maybeGesture.a;
+				return _Utils_eq(aGesture, gesture);
+			} else {
+				return false;
 			}
-			return $author$project$Main$Computer;
-		}
-	} else {
-		return $author$project$Main$Draw;
-	}
-};
+		};
+		var highlighted = function (gesture) {
+			if (maybeHighlightedGesture.$ === 'Just') {
+				var aGesture = maybeHighlightedGesture.a;
+				return _Utils_eq(aGesture, gesture);
+			} else {
+				return false;
+			}
+		};
+		var clickable = _Utils_eq(maybeHighlightedGesture, $elm$core$Maybe$Nothing) && _Utils_eq(maybeGesture, $elm$core$Maybe$Nothing);
+		var classA = _Utils_eq(maybeHighlightedGesture, $elm$core$Maybe$Nothing) ? 'user' : 'computer';
+		return A2(
+			$elm$html$Html$li,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$classList(
+					_List_fromArray(
+						[
+							_Utils_Tuple2('gesture-wheel', true),
+							_Utils_Tuple2(classA, true),
+							_Utils_Tuple2(
+							'selected',
+							!_Utils_eq(maybeGesture, $elm$core$Maybe$Nothing))
+						]))
+				]),
+			_List_fromArray(
+				[
+					A4(
+					$author$project$Main$viewGesture,
+					$author$project$Main$Rock,
+					selected($author$project$Main$Rock),
+					highlighted($author$project$Main$Rock),
+					clickable),
+					A4(
+					$author$project$Main$viewGesture,
+					$author$project$Main$Paper,
+					selected($author$project$Main$Paper),
+					highlighted($author$project$Main$Paper),
+					clickable),
+					A4(
+					$author$project$Main$viewGesture,
+					$author$project$Main$Scissors,
+					selected($author$project$Main$Scissors),
+					highlighted($author$project$Main$Scissors),
+					clickable),
+					A4(
+					$author$project$Main$viewGesture,
+					$author$project$Main$Lizard,
+					selected($author$project$Main$Lizard),
+					highlighted($author$project$Main$Lizard),
+					clickable),
+					A4(
+					$author$project$Main$viewGesture,
+					$author$project$Main$Spock,
+					selected($author$project$Main$Spock),
+					highlighted($author$project$Main$Spock),
+					clickable)
+				]));
+	});
+var $author$project$Main$viewComputerGesture = F2(
+	function (highlightedGesture, maybeGesture) {
+		return A2(
+			$author$project$Main$viewGestureWheel,
+			$elm$core$Maybe$Just(highlightedGesture),
+			maybeGesture);
+	});
+var $author$project$Main$PlayAgain = {$: 'PlayAgain'};
+var $elm$html$Html$button = _VirtualDom_node('button');
+var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $author$project$Main$winnerToString = function (result) {
 	switch (result.$) {
 		case 'Draw':
@@ -5398,182 +5837,99 @@ var $author$project$Main$winnerToString = function (result) {
 			return 'You lost';
 	}
 };
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
-var $author$project$Main$viewOutcome = function (model) {
-	return _List_fromArray(
-		[
-			A2(
-			$author$project$Main$viewGesture,
-			A2($elm$core$Maybe$withDefault, $author$project$Main$Rock, model.userGesture),
-			true),
-			A2(
-			$author$project$Main$viewGesture,
-			A2($elm$core$Maybe$withDefault, $author$project$Main$Rock, model.computerGesture),
-			true),
-			$elm$html$Html$text(
-			$author$project$Main$winnerToString(
-				$author$project$Main$winner(model))),
-			A2(
-			$elm$html$Html$button,
-			_List_Nil,
-			_List_fromArray(
-				[
-					$elm$html$Html$text('Play again')
-				]))
-		]);
-};
-var $author$project$Main$Lizard = {$: 'Lizard'};
-var $author$project$Main$Paper = {$: 'Paper'};
-var $author$project$Main$Scissors = {$: 'Scissors'};
-var $author$project$Main$Spock = {$: 'Spock'};
-var $author$project$Main$viewGestureWheel = function (model) {
-	var selected = function (gesture) {
-		var _v1 = model.stage;
-		switch (_v1.$) {
-			case 'Start':
-				return _Utils_eq(
-					$elm$core$Maybe$Just(gesture),
-					model.userGesture);
-			case 'Playing':
-				return _Utils_eq(
-					$elm$core$Maybe$Just(gesture),
-					model.computerGesture);
-			default:
-				return false;
-		}
-	};
-	var attr = function () {
-		var _v0 = model.stage;
-		switch (_v0.$) {
-			case 'Start':
-				return 'user-gesture';
-			case 'Playing':
-				return 'computer-gesture';
-			default:
-				return '';
-		}
-	}();
-	return A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class(
-				A2(
-					$elm$core$String$join,
-					' ',
-					_List_fromArray(
-						['gesture-wheel', attr])))
-			]),
-		_List_fromArray(
-			[
-				A2(
-				$author$project$Main$viewGesture,
-				$author$project$Main$Rock,
-				selected($author$project$Main$Rock)),
-				A2(
-				$author$project$Main$viewGesture,
-				$author$project$Main$Paper,
-				selected($author$project$Main$Paper)),
-				A2(
-				$author$project$Main$viewGesture,
-				$author$project$Main$Scissors,
-				selected($author$project$Main$Scissors)),
-				A2(
-				$author$project$Main$viewGesture,
-				$author$project$Main$Lizard,
-				selected($author$project$Main$Lizard)),
-				A2(
-				$author$project$Main$viewGesture,
-				$author$project$Main$Spock,
-				selected($author$project$Main$Spock))
-			]));
-};
-var $author$project$Main$viewPlaying = function (model) {
-	return _List_fromArray(
-		[
-			A2(
+var $author$project$Main$viewResult = F2(
+	function (userG, computerG) {
+		return A2(
 			$elm$html$Html$div,
-			_List_Nil,
 			_List_fromArray(
 				[
+					$elm$html$Html$Attributes$class('result')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text(
+					$author$project$Main$winnerToString(
+						A2($author$project$Main$winner, userG, computerG))),
 					A2(
-					$author$project$Main$viewGesture,
-					A2($elm$core$Maybe$withDefault, $author$project$Main$Rock, model.userGesture),
-					true)
-				])),
-			A2(
-			$elm$html$Html$div,
-			_List_Nil,
-			_List_fromArray(
-				[
-					$author$project$Main$viewGestureWheel(model)
-				]))
-		]);
-};
-var $author$project$Main$viewStart = function (model) {
-	return _List_fromArray(
-		[
-			A2(
-			$elm$html$Html$div,
-			_List_Nil,
-			_List_fromArray(
-				[
-					$author$project$Main$viewGestureWheel(model)
-				]))
-		]);
+					$elm$html$Html$button,
+					_List_fromArray(
+						[
+							$elm$html$Html$Events$onClick($author$project$Main$PlayAgain)
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Play again')
+						]))
+				]));
+	});
+var $author$project$Main$viewUserGesture = function (maybeGesture) {
+	return A2($author$project$Main$viewGestureWheel, $elm$core$Maybe$Nothing, maybeGesture);
 };
 var $author$project$Main$viewContent = function (model) {
-	var _v0 = model.stage;
-	switch (_v0.$) {
-		case 'Start':
-			return $author$project$Main$viewStart(model);
-		case 'Playing':
-			return $author$project$Main$viewPlaying(model);
-		default:
-			return $author$project$Main$viewOutcome(model);
-	}
+	return A3(
+		$elm$html$Html$Keyed$node,
+		'ul',
+		_List_Nil,
+		function () {
+			var _v0 = model.stage;
+			switch (_v0.$) {
+				case 'Start':
+					return _List_fromArray(
+						[
+							_Utils_Tuple2(
+							'user',
+							$author$project$Main$viewUserGesture($elm$core$Maybe$Nothing))
+						]);
+				case 'UserSelected':
+					var gesture = _v0.a;
+					return _List_fromArray(
+						[
+							_Utils_Tuple2(
+							'user',
+							$author$project$Main$viewUserGesture(
+								$elm$core$Maybe$Just(gesture)))
+						]);
+				case 'ComputerHighlighting':
+					var userG = _v0.a;
+					var computerG = _v0.b;
+					return _List_fromArray(
+						[
+							_Utils_Tuple2(
+							'user',
+							$author$project$Main$viewUserGesture(
+								$elm$core$Maybe$Just(userG))),
+							_Utils_Tuple2(
+							'computer',
+							A2($author$project$Main$viewComputerGesture, computerG, $elm$core$Maybe$Nothing))
+						]);
+				default:
+					var userG = _v0.a;
+					var computerG = _v0.b;
+					return _List_fromArray(
+						[
+							_Utils_Tuple2(
+							'user',
+							$author$project$Main$viewUserGesture(
+								$elm$core$Maybe$Just(userG))),
+							_Utils_Tuple2(
+							'result',
+							A2($author$project$Main$viewResult, userG, computerG)),
+							_Utils_Tuple2(
+							'computer',
+							A2(
+								$author$project$Main$viewComputerGesture,
+								computerG,
+								$elm$core$Maybe$Just(computerG)))
+						]);
+			}
+		}());
 };
-var $author$project$Main$gestureToString = function (maybeGesture) {
-	if (maybeGesture.$ === 'Just') {
-		switch (maybeGesture.a.$) {
-			case 'Rock':
-				var _v1 = maybeGesture.a;
-				return 'Rock';
-			case 'Paper':
-				var _v2 = maybeGesture.a;
-				return 'Paper';
-			case 'Scissors':
-				var _v3 = maybeGesture.a;
-				return 'Scissors';
-			case 'Lizard':
-				var _v4 = maybeGesture.a;
-				return 'Lizard';
-			default:
-				var _v5 = maybeGesture.a;
-				return 'Spock';
-		}
-	} else {
-		return 'No gesture yet';
-	}
+var $elm$core$String$cons = _String_cons;
+var $elm$core$String$fromChar = function (_char) {
+	return A2($elm$core$String$cons, _char, '');
 };
-var $author$project$Main$stageToString = function (stage) {
-	switch (stage.$) {
-		case 'Start':
-			return 'Start';
-		case 'Playing':
-			return 'Playing';
-		default:
-			return 'Outcome';
-	}
-};
+var $elm$core$Char$fromCode = _Char_fromCode;
+var $elm$html$Html$p = _VirtualDom_node('p');
 var $author$project$Main$viewFooter = function (model) {
 	return _List_fromArray(
 		[
@@ -5583,28 +5939,75 @@ var $author$project$Main$viewFooter = function (model) {
 			_List_fromArray(
 				[
 					$elm$html$Html$text(
-					$author$project$Main$stageToString(model.stage)),
-					$elm$html$Html$text(
-					$author$project$Main$gestureToString(model.userGesture)),
-					$elm$html$Html$text(
-					$author$project$Main$gestureToString(model.computerGesture)),
-					$elm$html$Html$text(
-					$elm$core$String$fromInt(model.userScore)),
-					$elm$html$Html$text(
-					$elm$core$String$fromInt(model.computerScore))
+					$elm$core$String$fromChar(
+						$elm$core$Char$fromCode(169)) + ' Mark Farmiloe'),
+					A2(
+					$elm$html$Html$p,
+					_List_Nil,
+					_List_fromArray(
+						[
+							$elm$html$Html$text(
+							$elm$core$String$fromInt(model.userScore) + (' ' + $elm$core$String$fromInt(model.computerScore)))
+						]))
 				]))
 		]);
 };
+var $elm$html$Html$h1 = _VirtualDom_node('h1');
 var $author$project$Main$viewHeader = function (model) {
-	return _List_fromArray(
+	var activeGame = (model.userScore + model.computerScore) > 0;
+	return activeGame ? _List_fromArray(
 		[
 			A2(
-			$elm$html$Html$div,
+			$elm$html$Html$h1,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Rock, Paper, Scissors, Lizard, Spock')
+				])),
+			A2(
+			$elm$html$Html$p,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Your chance to play the iconic game from The Big Bang Theory.')
+				])),
+			A2(
+			$elm$html$Html$p,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Select your gesture to start the game.')
+				])),
+			A2(
+			$elm$html$Html$p,
 			_List_Nil,
 			_List_fromArray(
 				[
 					$elm$html$Html$text(
-					$author$project$Main$stageToString(model.stage))
+					'Scores: You - ' + ($elm$core$String$fromInt(model.userScore) + ('  Computer - ' + $elm$core$String$fromInt(model.computerScore))))
+				]))
+		]) : _List_fromArray(
+		[
+			A2(
+			$elm$html$Html$h1,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Rock, Paper, Scissors, Lizard, Spock')
+				])),
+			A2(
+			$elm$html$Html$p,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Your chance to play the iconic game from The Big Bang Theory.')
+				])),
+			A2(
+			$elm$html$Html$p,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Select your gesture to start the game.')
 				]))
 		]);
 };
@@ -5614,7 +6017,8 @@ var $author$project$Main$view = function (model) {
 		_List_Nil,
 		_Utils_ap(
 			$author$project$Main$viewHeader(model),
-			_Utils_ap(
+			A2(
+				$elm$core$List$cons,
 				$author$project$Main$viewContent(model),
 				$author$project$Main$viewFooter(model))));
 };

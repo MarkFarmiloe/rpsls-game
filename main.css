@@ -1,31 +1,72 @@
-.gesture-wheel {
-  border: 2px solid green;
-  border-radius: 50%;
-  height: 300px;
-  margin: 50px;
-  position: relative;
-  width: 300px;
+body div {
+  margin: auto;
+  width:400px;
 }
 
-.gesture-wheel.user-gesture .gesture-container:hover {
+li {
+  list-style-type: none;
+}
+
+button {
+  margin: 10px;
+}
+
+ul {
+  display: inline-block;
+  margin: 0;
+  padding: 0;
+}
+
+.result {
+  margin: 4px;
+}
+
+.gesture-wheel {
+  border: 2px solid blue;
+  border-radius: 50%;
+  height: 300px;
+  margin: 80px 40px 40px 40px;
+  position: relative;
+  width: 300px;
+  transition: height 2s;
+}
+
+.gesture-container {
+  background-color: white;
+  border: 2px solid cyan;
+  border-radius: 50%;
+  height: 100px;
+  position: absolute;
+  width: 100px;
+  text-align: center;
+  z-index: 1;
+}
+
+.gesture-wheel.computer,
+.gesture-wheel.computer .gesture-container {
+  border-color: yellow;
+}
+
+.gesture-wheel.user .gesture-container:hover {
   background-color: lightblue;
 }
 
-.gesture-wheel.user-gesture .gesture-container.selected {
-  background-color: blue;
+.gesture-wheel.user .gesture-container.selected {
+  background-color: cyan;
 }
 
-.gesture-wheel.computer-selected .gesture-container.highlight {
-  background-color: lightyellow;
+.gesture-wheel.computer .gesture-container.highlighted {
+  background-color: rgb(220, 220, 26);
 }
 
-.gesture-wheel.computer-selected .gesture-container.selected {
+.gesture-wheel.computer .gesture-container.selected {
   background-color: yellow;
 }
 
-/* 
+.gesture-container {
+  transition: left 2s, top 2s;
+}
 
-*/
 .gesture-container:nth-child(1) {
   left: 100px;
   top: -50px;
@@ -51,19 +92,28 @@
   top: 70px;
 }
 
-.gesture-container {
-  background-color: beige;
-  border: 2px solid green;
-  border-radius: 50%;
-  height: 100px;
-  position: absolute;
-  width: 100px;
-  text-align: center;
-  z-index: 1;
+.gesture-container.selected {
+  left: 100px;
+  top: -50px;
+}
+
+.gesture-wheel.selected {
+  border-width: 0;
+  height: 60px;
+}
+
+.gesture-wheel.selected .gesture-container:not(.selected) {
+  display: none;
 }
 
 .gesture {
   position: absolute;
   top: 8px;
   left: 8px;
+}
+
+@media screen and (max-width: 420px) {
+  body div {
+    transform: scale( 0.75, 0.75);
+  }
 }

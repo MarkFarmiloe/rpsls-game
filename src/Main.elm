@@ -1,15 +1,19 @@
 module Main exposing (..)
 
 import Browser
-import Html exposing (Html, button, div, img, text)
+import Delay
+import Html exposing (Html, button, div, h1, img, li, p, text)
 import Html.Attributes exposing (class, classList, src)
 import Html.Events exposing (onClick)
+import Html.Keyed as Keyed
+import Random
 
 
 type Stage
     = Start
-    | Playing
-    | Outcome
+    | UserSelected Gesture
+    | ComputerHighlighting Gesture Gesture
+    | Outcome Gesture Gesture
 
 
 type Gesture
@@ -32,33 +36,33 @@ stageToString stage =
         Start ->
             "Start"
 
-        Playing ->
-            "Playing"
+        UserSelected ug ->
+            "Playing " ++ gestureToString ug
 
-        Outcome ->
-            "Outcome"
+        ComputerHighlighting _ cg ->
+            "Computer highlighting " ++ gestureToString cg
+
+        Outcome ug cg ->
+            "Outcome " ++ gestureToString ug ++ " " ++ gestureToString cg
 
 
-gestureToString : Maybe Gesture -> String
-gestureToString maybeGesture =
-    case maybeGesture of
-        Just Rock ->
+gestureToString : Gesture -> String
+gestureToString gesture =
+    case gesture of
+        Rock ->
             "Rock"
 
-        Just Paper ->
+        Paper ->
             "Paper"
 
-        Just Scissors ->
+        Scissors ->
             "Scissors"
 
-        Just Lizard ->
+        Lizard ->
             "Lizard"
 
-        Just Spock ->
+        Spock ->
             "Spock"
-
-        Nothing ->
-            "No gesture yet"
 
 
 winnerToString : Winner -> String
@@ -74,49 +78,47 @@ winnerToString result =
             "You lost"
 
 
-winner : Model -> Winner
-winner model =
-    case (model.userGesture, model.computerGesture) of
-        (Just ug, Just cg) ->
-            if ug == cg then
-                Draw
+winner : Gesture -> Gesture -> Winner
+winner ug cg =
+    if ug == cg then
+        Draw
 
-            else
-                case ( ug, cg ) of
-                    ( Rock, Scissors ) ->
-                        User
+    else
+        case ( ug, cg ) of
+            ( Rock, Scissors ) ->
+                User
 
-                    ( Rock, Lizard ) ->
-                        User
+            ( Rock, Lizard ) ->
+                User
 
-                    ( Paper, Rock ) ->
-                        User
+            ( Paper, Rock ) ->
+                User
 
-                    ( Paper, Spock ) ->
-                        User
+            ( Paper, Spock ) ->
+                User
 
-                    ( Scissors, Paper ) ->
-                        User
+            ( Scissors, Paper ) ->
+                User
 
-                    ( Scissors, Lizard ) ->
-                        User
+            ( Scissors, Lizard ) ->
+                User
 
-                    ( Lizard, Paper ) ->
-                        User
+            ( Lizard, Paper ) ->
+                User
 
-                    ( Lizard, Spock ) ->
-                        User
+            ( Lizard, Spock ) ->
+                User
 
-                    ( Spock, Rock ) ->
-                        User
+            ( Spock, Rock ) ->
+                User
 
-                    ( Spock, Scissors ) ->
-                        User
+            ( Spock, Scissors ) ->
+                User
 
-                    ( _, _ ) ->
-                        Computer
+            ( _, _ ) ->
+                Computer
 
-        (_, _) -> Draw
+
 
 -- MAIN
 
@@ -137,8 +139,6 @@ main =
 
 type alias Model =
     { stage : Stage
-    , userGesture : Maybe Gesture
-    , computerGesture : Maybe Gesture
     , userScore : Int
     , computerScore : Int
     }
@@ -146,7 +146,7 @@ type alias Model =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Model Start Nothing Nothing 0 0
+    ( Model Start 0 0
     , Cmd.none
     )
 
@@ -156,29 +156,102 @@ init _ =
 
 
 type Msg
-    = NoOp
-    | GestureClicked Gesture
+    = PlayAgain
+    | UserGestureClicked Gesture
+    | ComputerGestureSelected Int
+    | ComputerGestureHighlighted Int Int
+    | ShowOutcome Gesture
+
+
+intToGesture : Int -> Gesture
+intToGesture n =
+    case modBy 5 n of
+        1 ->
+            Rock
+
+        2 ->
+            Paper
+
+        3 ->
+            Scissors
+
+        4 ->
+            Lizard
+
+        _ ->
+            Spock
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        GestureClicked gesture ->
+        UserGestureClicked gesture ->
+            ( { model | stage = UserSelected gesture }
+            , Random.generate ComputerGestureSelected (Random.int 1 5)
+            )
+
+        ComputerGestureSelected n ->
+            -- let
+            --     steps =
+            --         List.range 2 (n + 4)
+            --             |> List.map (\x -> Delay.after (200 * x) (ComputerGestureHighlighted <| cg x))
+            -- in
+            ( model, Delay.after 100 <| ComputerGestureHighlighted 1 (n + 5) )
+
+        -- <| cg 1) :: steps ++ [ Delay.after (200 * (n + 6)) (ShowOutcome <| cg n) ]) )
+        ComputerGestureHighlighted count n ->
             let
-                newModel =
+                userG =
                     case model.stage of
-                        Start ->
-                            { model | userGesture = Just gesture, stage = Playing }
+                        UserSelected ug ->
+                            ug
 
-                        Playing ->
-                            { model | computerGesture = Just gesture, stage = Outcome }
+                        ComputerHighlighting userg _ ->
+                            userg
 
-                        _ -> model
+                        _ ->
+                            Rock
             in
-            ( newModel, Cmd.none )
+            if count < n then
+                ( { model | stage = ComputerHighlighting userG <| intToGesture count }, Delay.after 200 (ComputerGestureHighlighted (count + 1) n) )
 
-        _ ->
-            ( model, Cmd.none )
+            else
+                ( model, Delay.after 100 (ShowOutcome <| intToGesture n) )
+
+        ShowOutcome cg ->
+            case model.stage of
+                ComputerHighlighting userG _ ->
+                    let
+                        theWinner =
+                            winner userG cg
+
+                        newUserScore =
+                            model.userScore
+                                + (if theWinner == User then
+                                    1
+
+                                   else
+                                    0
+                                  )
+
+                        newComputerScore =
+                            model.computerScore
+                                + (if theWinner == Computer then
+                                    1
+
+                                   else
+                                    0
+                                  )
+                    in
+                    ( { model | stage = Outcome userG cg, userScore = newUserScore, computerScore = newComputerScore }
+                    , Cmd.none
+                    )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        PlayAgain ->
+            ( { model | stage = Start }, Cmd.none )
 
 
 
@@ -187,71 +260,93 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    div [] (viewHeader model ++ viewContent model ++ viewFooter model)
-
-
-
--- case model.userGesture of
---     Just gesture ->
---         text (gestureToString gesture)
---     Nothing ->
---         text "time to play"
+    div []
+        (viewHeader model ++ (viewContent model :: viewFooter model))
 
 
 viewHeader : Model -> List (Html msg)
 viewHeader model =
-    [ div [] [ text (stageToString model.stage) ] ]
+    let
+        activeGame =
+            model.userScore + model.computerScore > 0
+    in
+    if activeGame then
+        [ h1 [] [ text "Rock, Paper, Scissors, Lizard, Spock" ]
+        , p [] [ text "Your chance to play the iconic game from The Big Bang Theory." ]
+        , p [] [ text "Select your gesture to start the game." ]
+        , p []
+            [ text
+                ("Scores: You - "
+                    ++ String.fromInt model.userScore
+                    ++ "  Computer - "
+                    ++ String.fromInt model.computerScore
+                )
+            ]
+        ]
+
+    else
+        [ h1 [] [ text "Rock, Paper, Scissors, Lizard, Spock" ]
+        , p [] [ text "Your chance to play the iconic game from The Big Bang Theory." ]
+        , p [] [ text "Select your gesture to start the game." ]
+        ]
 
 
-viewContent : Model -> List (Html Msg)
+viewContent : Model -> Html Msg
 viewContent model =
-    case model.stage of
-        Start ->
-            viewStart model
+    Keyed.node "ul"
+        []
+        (case model.stage of
+            Start ->
+                [ ( "user", viewUserGesture Nothing ) ]
 
-        Playing ->
-            viewPlaying model
+            UserSelected gesture ->
+                [ ( "user", viewUserGesture (Just gesture) )
+                ]
 
-        Outcome ->
-            viewOutcome model
+            ComputerHighlighting userG computerG ->
+                [ ( "user", viewUserGesture (Just userG) )
+                , ( "computer", viewComputerGesture computerG Nothing )
+                ]
+
+            Outcome userG computerG ->
+                [ ( "user", viewUserGesture (Just userG) )
+                , ( "result", viewResult userG computerG )
+                , ( "computer", viewComputerGesture computerG (Just computerG) )
+                ]
+        )
 
 
 viewFooter : Model -> List (Html msg)
 viewFooter model =
     [ div []
-        [ text (stageToString model.stage)
-        , text (gestureToString model.userGesture)
-        , text (gestureToString model.computerGesture)
-        , text (String.fromInt model.userScore)
-        , text (String.fromInt model.computerScore)
+        [ text <| String.fromChar (Char.fromCode 169) ++ " Mark Farmiloe"
+        , p [] [ text <| String.fromInt model.userScore ++ " " ++ String.fromInt model.computerScore ]
+
+        -- , p [] [ text <| stageToString model.stage ]
         ]
     ]
 
 
-viewStart : Model -> List (Html Msg)
-viewStart model =
-    [ div [] [ viewGestureWheel model ]
-    ]
+viewUserGesture : Maybe Gesture -> Html Msg
+viewUserGesture maybeGesture =
+    viewGestureWheel Nothing maybeGesture
 
 
-viewPlaying : Model -> List (Html Msg)
-viewPlaying model =
-    [ div [] [ viewGesture (Maybe.withDefault Rock model.userGesture) True ]
-    , div [] [ viewGestureWheel model ]
-    ]
+viewResult : Gesture -> Gesture -> Html Msg
+viewResult userG computerG =
+    div [ class "result" ]
+        [ text <| winnerToString <| winner userG computerG
+        , button [ onClick PlayAgain ] [ text "Play again" ]
+        ]
 
 
-viewOutcome : Model -> List (Html Msg)
-viewOutcome model =
-    [ viewGesture (Maybe.withDefault Rock model.userGesture) True
-    , viewGesture (Maybe.withDefault Rock model.computerGesture) True
-    , text <| winnerToString <| winner model
-    , button [] [ text "Play again" ]
-    ]
+viewComputerGesture : Gesture -> Maybe Gesture -> Html Msg
+viewComputerGesture highlightedGesture maybeGesture =
+    viewGestureWheel (Just highlightedGesture) maybeGesture
 
 
-viewGesture : Gesture -> Bool -> Html Msg
-viewGesture gesture selected =
+viewGesture : Gesture -> Bool -> Bool -> Bool -> Html Msg
+viewGesture gesture selected highlighted clickable =
     let
         source =
             case gesture of
@@ -270,47 +365,55 @@ viewGesture gesture selected =
                 Spock ->
                     "assets/spock.png"
     in
-    div [ class "gesture-container", classList [ ( "selected", selected ) ], onClick (GestureClicked gesture) ]
-        [ img [ class "gesture", src source ] [] ]
+    if clickable then
+        div [ class "gesture-container", classList [ ( "selected", selected ), ( "highlighted", highlighted ) ], onClick (UserGestureClicked gesture) ]
+            [ img [ class "gesture", src source ] [] ]
+
+    else
+        div [ class "gesture-container", classList [ ( "selected", selected ), ( "highlighted", highlighted ) ] ]
+            [ img [ class "gesture", src source ] [] ]
 
 
-viewGestureWheel : Model -> Html Msg
-viewGestureWheel model =
+viewGestureWheel : Maybe Gesture -> Maybe Gesture -> Html Msg
+viewGestureWheel maybeHighlightedGesture maybeGesture =
     let
-        attr =
-            case model.stage of
-                Start ->
-                    "user-gesture"
+        highlighted gesture =
+            case maybeHighlightedGesture of
+                Just aGesture ->
+                    aGesture == gesture
 
-                Playing ->
-                    "computer-gesture"
-
-                _ ->
-                    ""
+                Nothing ->
+                    False
 
         selected gesture =
-            case model.stage of
-                Start ->
-                    Just gesture == model.userGesture
+            case maybeGesture of
+                Just aGesture ->
+                    aGesture == gesture
 
-                Playing ->
-                    Just gesture == model.computerGesture
-
-                _ ->
+                Nothing ->
                     False
+
+        clickable =
+            maybeHighlightedGesture == Nothing && maybeGesture == Nothing
+
+        classA =
+            if maybeHighlightedGesture == Nothing then
+                "user"
+
+            else
+                "computer"
     in
-    div [ class (String.join " " [ "gesture-wheel", attr ]) ]
-        [ viewGesture Rock (selected Rock)
-        , viewGesture Paper (selected Paper)
-        , viewGesture Scissors (selected Scissors)
-        , viewGesture Lizard (selected Lizard)
-        , viewGesture Spock (selected Spock)
+    li
+        [ classList [ ( "gesture-wheel", True ), ( classA, True ), ( "selected", maybeGesture /= Nothing ) ] ]
+        [ viewGesture Rock (selected Rock) (highlighted Rock) clickable
+        , viewGesture Paper (selected Paper) (highlighted Paper) clickable
+        , viewGesture Scissors (selected Scissors) (highlighted Scissors) clickable
+        , viewGesture Lizard (selected Lizard) (highlighted Lizard) clickable
+        , viewGesture Spock (selected Spock) (highlighted Spock) clickable
         ]
 
 
 
--- div [ class "gesture-wheel" ]
---     [ viewGesture Lizard ]
 -- SUBSCRIPTIONS
 
 
